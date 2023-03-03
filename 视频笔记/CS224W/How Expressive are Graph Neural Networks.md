@@ -5,6 +5,7 @@
 	- 表达、学习、拟合、区分 ability to distinguish different graph structures
 - How to design a maximally expressive GNN model
 	- GIN
+***
 
 ### GNN Model Example
 
@@ -25,6 +26,7 @@
 - But nodes have the same neighborhood structures cuz they are symmetric within the graph
 	- 这时，仅通过图的连接结构，无法区分节点
 - GNN的表示方法: 计算图
+***
 
 ### Computational Graph
 - In each layer, a GNN aggregates neighboring node embeddings
@@ -41,6 +43,7 @@
 	- 理想GNN的聚合操作应该单射。根据计算图作为输入，然后将所有子树单射到node embeddings，得到结果
 	- 要保证计算图这个树中每一层汇聚的的过程都是单射,也就是每一层都是都使用单射邻居聚合函数（保留全部信息），把不同的邻居映射到不同的嵌入上。
 	- 最完美的单射聚合操作  -  Hash
+***
 
 ### Designing the Most Powerful Graph Neural Network 
 - Expressive power of GNNs can be characterized by that of neighbor aggregation functions they use
@@ -67,6 +70,7 @@
 - 邻居聚合是 a function over multi-set，multi-set是一个元素可重复的集合
 - GCN和GraphSAGE的聚合函数都不能区分某些基本的multi-set，因此都不单射，不够具有表达能力
 - 结论，GCN 、GraphSAGE都不是最理想的GNN
+***
 
 #### Design A Neural Network
 - Design a neural network that can model injective multiset function
@@ -86,6 +90,7 @@
 		- 这里的神经网络，我们是用带一层隐藏层的MLP
 	- $MLP_\Phi (\sum\limits_{x\in S} MLP_f(x))$
 	- In practice, MLP hidden dimensionality of 100 ~ 500
+***
 
 ### Most Expressive - GNN
 - Graph Isomorphism Network 图同构网络
@@ -138,6 +143,7 @@
 - Ranking by discriminative power
 	- Input:  sum - multiset > mean - distribution > max - set
 - GNN 不能识别 图中的环
+***
 
 ## 本章总结
 - 本章回顾了 GNN的通用框架、训练流程
