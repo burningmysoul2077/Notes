@@ -121,6 +121,8 @@
 		- Iteratively refine node colors by  $GINConv(c^{(k)}(v), {\{c^{(k)}(u) \}}_{u \in N(v)})$
 			- GINConv  -  maps different inputs to different colors
 		- After $K$ steps of color refinement,  $c^{(k)}(v)$ summarizes the structure of $K$-hop neighborhood
+
+
 |                 | Update target                    | Update function |
 | --------------- | -------------------------------- | --------------- |
 | WL Graph Kernel | Node colors(one-hot)             | HASH            |
