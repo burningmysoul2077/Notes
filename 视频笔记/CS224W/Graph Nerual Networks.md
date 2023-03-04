@@ -225,9 +225,9 @@
 2. Define a loss function on the embeddings
 3. Train on a set of nodes, i.e. a batch of compute graphs (mini-batch)
 4. Generate embeddings for nodes as needed, 泛化到新节点、新图，Inductive Learning 归纳式学习
-***
 
-## GNNs subsume CNNs and Transformers
+
+### GNNs subsume CNNs and Transformers
 - CNN can be seen as a special GNN with fixed neighbot size and ordering 固定的邻域和固定的顺序
 	- the size of filter 卷积核 is pre-defined for a CNN
 	- the advg. of GNN is it processes arbitrary graphs with different degrees for each node
@@ -286,18 +286,28 @@
 ### Classical GNN layers
 
 #### GCN
-- $h_v^{(l)} = \sigma(\sum\limits_{u \in N(v)}W^{(l)}\frac{h_u^{(l - 1)}}{|N(v)|})$
+- Graph Convolutional Networks 图卷积神经网络
+- 与CNN具体计算操作实现方式不同，但背后隐含的计算思想是相同的，都是从周围提取信息然后通过执行某种操作而获得新的信息
+- 《Semi-supervised Classification with Graph Convolutional Networks》(ICLR 2017)
+-  计算公式:  $h_v^{(l)} = \sigma(W^{(l)}\sum\limits_{u \in N(v)}\frac{h_u^{(l - 1)}}{|N(v)|})$
 - Written as Message + Aggregation
+	- 分成两部分
+		- Message -  $W^{(l)}\frac{h_u^{(l - 1)}}{|N(v)|}$
+		- Aggregation  -  $\sum\limits_{u \in N(v)}$
 	- Message
 		- each neighbor:  $m_u^{(l)} = \frac{1}{|N(v)|}W^{(l)}h_u^{(l-1)}$
 			- normalized by node degree
-			- normalized adjacency matrix $D^{-1/2}AD^{-1/2}$
+		- normalized adjacency matrix $D^{-1/2}AD^{-1/2}$
 	- Aggregation
 		- sum over messages from neighbors, then apply activation
 		- $h_v^{(l)} = \sigma(Sum(\{ m_u^{(l)}, u \in N(v) \}))$
 			- In GCN graph is assumed to have self-edges
 
 #### GraphSAGE
+- Graph SAmple and aggreGatE，中心思想是小批量采用原有大图中的子图
+	- sample  -  对邻域节点采样
+	- aggregate  -  邻域节点的特征聚集
+- 《Inductive Representation Learning on Large Graphs》
 - $h_v^{(l)} = \sigma(W^{(l)} \times CONCAT(h_v^{(l-1)}, AGG(\{ h_u^{(l-1)}, \forall u \in N(v) \})))$
 - Written as Message + Aggregation
 	- Message is computed within the AGG(·)
@@ -307,7 +317,41 @@
 		- stage 2  -  further aggregate over the node itself
 			- $h_v^{(l)} = \sigma(W^{(l)} \times CONCAT(h_v^{(l-1)}, h_{N(v)}^{(l)}))$
 - GraphSAGE neighbor aggregation
-	- Mean  -  take a weighted avg. of neighbors
+	- Mean  -  take a weighted avg. of neighbors，可以不做拼接操作，直接将上一层自身信息与邻居信息进行均值处理
+		- AGG = $\sum\limits_{u \in N(v)}\frac{h_u^{(l - 1)}}{|N(v)|}$
+			- aggregation  -  $\sum\limits_{u \in N(v)}$
+			- message computation  -  $|N(v)|$
+	- Pool  -  transform neighbor vector and apply symmetric vector function Mean(·) or Max(·)，将邻居构成的向量放入全连接网络然后接上一个最大池化或平均池化
+		- AGG = Mean ({ MLP($h_u^{(l-1)}$), $\forall u \in N(v)$})
+			- aggregation  -  Mean
+			- message computation  -  MLP
+	- LSTM  -  apply LSTM to reshuffled of neighbors  为了消除序列性，长短时记忆神经网络，打乱节点顺序输入。具有大容量的优点
+		- AGG = LSTM (\[ $h_u^{(l-1)} ,\forall u \in \pi(N(v))$ \])
+			- aggregation  -  LSTM
+- L2 Normalization
+	- Apply $\mathcal{l}_2$ mnormalization to $h_v^{(l)}$ at every layer
+	- $h_v^{(l)} \leftarrow \frac{h_v^{(l)}}{||{h_v^{(l)}||}_2} \enspace \forall v\in V \enspace where \enspace {||u||}_2 = \sqrt{\sum_iu_i^2} \enspace (l_2 - norm)$
+- Without L2 normalization, the embedding vectors have different scales for vectors
+- After this, all vectors will have the same L2-norm
+
+#### GAT
+- Graph Attention Networks
+- 《Graph Attention Networks》(ICLR 2018)
+- 将注意力机制引入到了GNN模型表征中
+- $h_v^{(l)} = \sigma(\sum_{u \in N(v)} \alpha_{vu} W^{(l)} h_u^{(l-1)})$
+	- $\alpha_{vu}$  -  attention weights
+- In GCN / GraphSAGE
+	- $\alpha_{vu} = \frac{1}{|N(v)|}$  -  the weighting factor of node $u$'s message to node $v$
+	- 不同邻居带来的信息权重相同(连接的权重相同)
+- In GAT, *not* all node's neighbots are eqaully important
+	- Attention is inspired by 认知科学中的“注意力”
+	- $\alpha_{vu}$ focuses on the *important* parts of the input data and fades out the rest
+		- the NN should devote more computing power on small but important part of data
+		- the importance depends on the context and is learned through training
+- 通过学习得到注意力权重
+	- Goal: specify arbitrary importance to different neighbors of each node in the graph
+
+##### Attention Mechanism
 
 ***
 
@@ -315,5 +359,7 @@
 - 本章回顾了node embedding，以及其编码器和解码器
 - 介绍了深度学习的基础，监督学习，损失函数，优化方法，梯度向量，随机梯度下降，非线性激活函数，以及多层感知机
 - 介绍图深度学习的思路，计算图和邻域、自嵌入向量的aggregation
-- 介绍了图卷积神经网络，以及基本方法 mean aggregation，以及矩阵形式
+- 介绍了图卷积神经网络，以及基本方法 mean aggregation，以及矩阵形式。
 - 介绍了图神经网络是一个通用体系结构，CNN和Transformer都可以被看作是一个特殊的GNN
+- 介绍了GNN的通用体系架构，GNN层包含Message和Aggregation，原始输入图要经过特征扩增、结构扩增才能成为计算图。介绍了经典的GNN层
+- 介绍了GCN 图卷积神经网络的计算公式，将其写成 Message + Aggregation的形式，使用节点的度来归一化，聚合所有邻域信息，最后使用激活函数.
