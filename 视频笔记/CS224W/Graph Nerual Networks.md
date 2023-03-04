@@ -247,26 +247,32 @@
 
 - GNN Layer = Message + Aggregation
 	- GCN GraphSAGE GAT
-- Idea: Raw input graph $\neq$ Computational graph
+- Idea: Raw input graph $\neq$ Computational graph 进行图增强，对原始输入进行一定处理
 	- Graph feature augmentation  特征扩增
 	- Graph structure augmentation  结构扩增
 
-### A Single Layer of a GNN
+### A Single Layer of a GNN 单层设计
 - Idea: compress a set of vectors into a single vector
+	- 将一系列向量（上一层的自身和邻居的message）压缩到一个向量中(新的节点嵌入)
 - 2-step process
 	- Message
 	- Aggregation
+- GNN在进行表征计算时一般会包括对节点的两种操作
+	- Message 消息传递，对节点特征信息的处理
+	- Aggregation 信息聚合，对邻域节点信息的聚合
+		- ordering invariant，结果与聚合的顺序无关
 
 #### Message Computation
 - Message function  $m_u^{(l)} = MSG^{(l)}(h_u^{(l - 1)})$
 	- each node will create a message, which will be sent to other nodes later
+	- e.g. A Linear layer $m_u^{(l)} = W^{(l)}h_u^{(l - 1)}$  -  node features 左乘 weight matrix
 
 #### Message Aggregation
 - Each node will aggregate the messages from node $v$'s neighbors
 	- $h_v^{(l)} = AGG^{(l)}(\{ m_u^{(l)}, u \in N(v) \})$
 		- aggregator - Sum(·)，Mean(·)，Max(·)
 - Issue
-	- Information from node $v$ itself could get lost
+	- Information from node $v$ itself could get lost 导致节点自身信息丢失
 	- Computation of $h_v^{(l)}$ does not directly depend on $h_v^{(l - 1)}$
 - Solution  -  includ $h_v^{(l - 1)}$ when computing $h_v^{(l)}$
 	- Message  -  compute messgae from node $v$ itself
@@ -274,12 +280,12 @@
 		- via concatenation or summation
 			- $h_v^{(l)} = CONCAT(AGG^{(l)}(\{ m_u^{(l)}, u \in N(v) \}), m_v^{(l)})$
 
-- Putting together
+- Putting together 合并上述两部
 	- Message  -  each node computes a message
 		- $m_u^{(l)} = MSG^{(l)}(h_u^{(l - 1)}, u \in \{ N(v) \cup v \})$
 	- Aggregation  -  aggregate messages from neighbors
 		- $h_v^{(l)} = AGG^{(l)}(\{ m_u^{(l)}, u \in N(v) \}, m_v^{(l)})$
-	- Nonlinearity 非线性表示能力
+	- Nonlinearity 非线性表示能力，这两部都可以用这个来增加其表现力
 		- often ReLU(·) Sigmoid(·)
 		- can be added to message or aggregation
 
@@ -288,6 +294,8 @@
 #### GCN
 - Graph Convolutional Networks 图卷积神经网络
 - 与CNN具体计算操作实现方式不同，但背后隐含的计算思想是相同的，都是从周围提取信息然后通过执行某种操作而获得新的信息
+- GCN 相当于对上一层的节点嵌入用本层的权重矩阵转换，用节点度归一化实现message，然后加总邻居节点，应用激活函数实现聚合
+	- 不同GCN论文中会应用不同的归一化方式
 - 《Semi-supervised Classification with Graph Convolutional Networks》(ICLR 2017)
 -  计算公式:  $h_v^{(l)} = \sigma(W^{(l)}\sum\limits_{u \in N(v)}\frac{h_u^{(l - 1)}}{|N(v)|})$
 - Written as Message + Aggregation
@@ -299,7 +307,7 @@
 			- normalized by node degree
 		- normalized adjacency matrix $D^{-1/2}AD^{-1/2}$
 	- Aggregation
-		- sum over messages from neighbors, then apply activation
+		- sum over messages from neighbors, then apply activation，累加操作，然后应用非线性激活函数
 		- $h_v^{(l)} = \sigma(Sum(\{ m_u^{(l)}, u \in N(v) \}))$
 			- In GCN graph is assumed to have self-edges
 
@@ -307,6 +315,7 @@
 - Graph SAmple and aggreGatE，中心思想是小批量采用原有大图中的子图
 	- sample  -  对邻域节点采样
 	- aggregate  -  邻域节点的特征聚集
+- GraphSAGE 可选用多种聚合方式来聚合邻居信息，然后再连接节点本身信息，最后使用L2正则化
 - 《Inductive Representation Learning on Large Graphs》
 - $h_v^{(l)} = \sigma(W^{(l)} \times CONCAT(h_v^{(l-1)}, AGG(\{ h_u^{(l-1)}, \forall u \in N(v) \})))$
 - Written as Message + Aggregation
@@ -328,7 +337,7 @@
 	- LSTM  -  apply LSTM to reshuffled of neighbors  为了消除序列性，长短时记忆神经网络，打乱节点顺序输入。具有大容量的优点
 		- AGG = LSTM (\[ $h_u^{(l-1)} ,\forall u \in \pi(N(v))$ \])
 			- aggregation  -  LSTM
-- L2 Normalization
+- L2 Normalization 每一层都归一化
 	- Apply $\mathcal{l}_2$ mnormalization to $h_v^{(l)}$ at every layer
 	- $h_v^{(l)} \leftarrow \frac{h_v^{(l)}}{||{h_v^{(l)}||}_2} \enspace \forall v\in V \enspace where \enspace {||u||}_2 = \sqrt{\sum_iu_i^2} \enspace (l_2 - norm)$
 - Without L2 normalization, the embedding vectors have different scales for vectors
@@ -337,9 +346,9 @@
 #### GAT
 - Graph Attention Networks
 - 《Graph Attention Networks》(ICLR 2018)
-- 将注意力机制引入到了GNN模型表征中
+- 将注意力机制引入到了GNN模型表征中，使用注意力机制为邻居对节点信息影响程度加权，用softmax过后的邻居信息加权求和来实现节点嵌入embedding的计算
 - $h_v^{(l)} = \sigma(\sum_{u \in N(v)} \alpha_{vu} W^{(l)} h_u^{(l-1)})$
-	- $\alpha_{vu}$  -  attention weights
+	- $\alpha_{vu}$  -  attention weights 注意力权重
 - In GCN / GraphSAGE
 	- $\alpha_{vu} = \frac{1}{|N(v)|}$  -  the weighting factor of node $u$'s message to node $v$
 	- 不同邻居带来的信息权重相同(连接的权重相同)
@@ -349,9 +358,78 @@
 		- the NN should devote more computing power on small but important part of data
 		- the importance depends on the context and is learned through training
 - 通过学习得到注意力权重
+	- node-wise 逐顶点的运算
 	- Goal: specify arbitrary importance to different neighbors of each node in the graph
+	- 给予邻居不同的重要性
 
 ##### Attention Mechanism
+- Attention Mechanism 分为两步走
+	1. 计算注意力系数
+		- Let $a_{vu}$ be computed as a byproduct of an attention mechanism $a$ :
+		- $e_{vu} = a(W^{(l)}h_u^{(l-1)}, W^{(l)}h_v^{(l-1)})$
+			- $e_{uv}$  -  attention coefficients 注意力分数, indicates the importance of $u$'s message to node $v$
+			- $a$  -  自注意力函数
+		- 归一化 Normalize $e_{vu}$
+			- $a_{vu} = \frac{exp(e_{vu})}{\sum_{k \in N(v)}exp(e_{vk})}$
+				- use softmax , s.t. $\sum_{u \in N(v)} a_{vu} = 1$
+	2. 加权求和 Weighted sum based on above 
+		- $h_v^{(l)} = \sigma(\sum_{u \in N(v)} \alpha_{vu} W^{(l)} h_u^{(l-1)})$
+- The form of attention mechanism $a$
+- 增强鲁棒性 Multi-head attention:  stabilizes the learning process of attention mechanism
+	- 多头注意力机制，分别训练不同的a函数，每个a函数对应一套 $\alpha$ 权重
+		- 避免偏见，陷入局部最优
+	- Create multiple attention scores
+		- $h_v^{(l)}[1] = \sigma(\sum_{u \in N(v)} \alpha_{vu}^1 W^{(l)} h_u^{(l-1)})$
+		- $h_v^{(l)}[2] = \sigma(\sum_{u \in N(v)} \alpha_{vu}^2 W^{(l)} h_u^{(l-1)})$
+		- $h_v^{(l)}[3] = \sigma(\sum_{u \in N(v)} \alpha_{vu}^3 W^{(l)} h_u^{(l-1)})$
+	- Aggregate outputs
+		- by concatenation or summation
+		- $h_v^{(l)} = AGG(h_v^{(l)}[1], h_v^{(l)}[2], h_v^{(l)}[3])$
+- Benefits
+	- Allows for (implicitly) specifying different importance values $a_{vu}$ to different neighbors 隐式指定节点信息对邻居的importance
+	- computationally efficient, can be parallelized
+	- storage efficient 稀疏矩阵运算需要存储的元素数不超过 $O ( V + E )$ ，参数数目固定（a 的可训练参数尺寸与图尺寸无关）
+	- only attends over local network neighborhoods 只注意局部邻居，赋予权重
+	- inductive capability 归纳泛化
+		- 共享同一个 $a$ 函数
+		- 并泛化到新图
+
+### GNN Layers in Practice
+- 通用GNN层模板
+- Many modern deep learning modules can be incorporated into a GNN layer
+	- 实践应用中的GNN层，往往会应用传统深度神经网络模块
+	- Batch Normalization
+		- stabilize neural network training
+	- Dropout
+		- prevent overfitting
+	- Attention/Gating
+		- ctrl the importance of a message
+	- More
+		- any other useful deep learning modules
+
+#### Batch Normalization
+- Goal:  stabilize neural networks training
+- Idea: Given a batch of inputs(node embeddings) 对节点嵌入进行归一化
+	- Re-center the node embeddings into zero mean 平均值=0
+	- Re-scale the variance into unit variance 方差=1
+- Input:  $X \in \mathbb{R}^{N \times D}$  
+	- $N$ node embeddings
+	- N 个样本，每个样本 D-维向量
+- Trainable Parameters:  $\gamma,\beta \in \mathbb{R}^D$
+	- 每个维度有 2 个恢复参数 
+- Output:  $Y \in \mathbb{R}^{N \times D}$
+	- Normalized node embeddings
+- Step 1 : compute the mean and variance over N embeddings
+	- $\mu_j = \frac{1}{N} \sum\limits_{i=1}^N X_{i,j}$
+	- $\sigma_j^2 = \frac{1}{N} \sum\limits_{i=1}^N {(X_{i,j} - \mu_j)}^2$
+- Step 2 : normalized the feature using computed mean and variance
+	- $\hat{X}_{i,j} = \frac{X_{i,j} - \mu_j}{\sqrt{{\sigma_j + \epsilon}^2}}$
+	- $Y_{i, j} = \gamma_j \hat{X}_{i,j} + \beta_j$
+
+#### Dropout
+
+
+### Stacking GNN Layers
 
 ***
 
@@ -363,3 +441,8 @@
 - 介绍了图神经网络是一个通用体系结构，CNN和Transformer都可以被看作是一个特殊的GNN
 - 介绍了GNN的通用体系架构，GNN层包含Message和Aggregation，原始输入图要经过特征扩增、结构扩增才能成为计算图。介绍了经典的GNN层
 - 介绍了GCN 图卷积神经网络的计算公式，将其写成 Message + Aggregation的形式，使用节点的度来归一化，聚合所有邻域信息，最后使用激活函数.
+- 介绍了GraphSAGE 图采样和聚集，它的思想和计算方法，以及归纳式表示学习
+- 介绍了GraphSAGE的消息传递和两步信息聚合，三种不同的聚合方法，最后应用L2 Norm 对每一层进行归一化。GraphSAGE相比于GCN的优势，它保留了节点本身信息特征。
+- 介绍了GAT 图注意力网络，注意力机制，将注意力这一概念引入图中，使用注意力机制为邻居对节点信息影响程度加权，用softmax过后的邻居信息加权求和来实现节点嵌入embedding的计算。
+- 介绍了注意力机制两步走的计算方法，为了增强鲁棒性，更是采用了多头注意力机制，分别训练不同的 a 函数，每个 a 函数对应一套 $\alpha$ 权重，来避免偏见。
+- 介绍了GAT的各种优点，包括隐式指定重要性、并行计算、存储高效、归纳泛化等。
