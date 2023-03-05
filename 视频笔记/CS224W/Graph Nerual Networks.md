@@ -351,9 +351,9 @@
 	- $\alpha_{vu}$  -  attention weights 注意力权重
 - In GCN / GraphSAGE
 	- $\alpha_{vu} = \frac{1}{|N(v)|}$  -  the weighting factor of node $u$'s message to node $v$
-	- 不同邻居带来的信息权重相同(连接的权重相同)
+	- 权重系数是固定的，不同邻居带来的信息权重相同(连接的权重相同)
 - In GAT, *not* all node's neighbots are eqaully important
-	- Attention is inspired by 认知科学中的“注意力”
+	- Attention is inspired by 认知科学中的“注意力”，人类受限于自身的认知，只关注身边一些重要的东西
 	- $\alpha_{vu}$ focuses on the *important* parts of the input data and fades out the rest
 		- the NN should devote more computing power on small but important part of data
 		- the importance depends on the context and is learned through training
@@ -377,7 +377,7 @@
 - The form of attention mechanism $a$
 - 增强鲁棒性 Multi-head attention:  stabilizes the learning process of attention mechanism
 	- 多头注意力机制，分别训练不同的a函数，每个a函数对应一套 $\alpha$ 权重
-		- 避免偏见，陷入局部最优
+		- 避免偏见、陷入局部最优
 	- Create multiple attention scores
 		- $h_v^{(l)}[1] = \sigma(\sum_{u \in N(v)} \alpha_{vu}^1 W^{(l)} h_u^{(l-1)})$
 		- $h_v^{(l)}[2] = \sigma(\sum_{u \in N(v)} \alpha_{vu}^2 W^{(l)} h_u^{(l-1)})$
@@ -408,7 +408,7 @@
 		- any other useful deep learning modules
 
 #### Batch Normalization
-- Goal:  stabilize neural networks training
+- Goal:  stabilize neural networks training 稳定训练过程
 - Idea: Given a batch of inputs(node embeddings) 对节点嵌入进行归一化
 	- Re-center the node embeddings into zero mean 平均值=0
 	- Re-scale the variance into unit variance 方差=1
@@ -420,6 +420,7 @@
 - Output:  $Y \in \mathbb{R}^{N \times D}$
 	- Normalized node embeddings
 - Step 1 : compute the mean and variance over N embeddings
+	- 在每个维度，分别计算 N 个样本的均值、标准差
 	- $\mu_j = \frac{1}{N} \sum\limits_{i=1}^N X_{i,j}$
 	- $\sigma_j^2 = \frac{1}{N} \sum\limits_{i=1}^N {(X_{i,j} - \mu_j)}^2$
 - Step 2 : normalized the feature using computed mean and variance
@@ -427,9 +428,91 @@
 	- $Y_{i, j} = \gamma_j \hat{X}_{i,j} + \beta_j$
 
 #### Dropout
+- Goal  -  regulize a neural net to prevent overfitting
+- Idea
+	- During training, with some prob. $p$, randomlt set neurons to zero 在训练阶段，以概率 $p$ 随机将神经元置为0，相当于关掉
+	- During testing, use all the neurons for computation 在测试阶段，用所有的神经元来进行计算
+- In GNN, Dropout is applied to the linear layer in the message function
+
+#### Activation (Non-linearity) 非线性激活函数
+- Apply activation to $i$-th dimension of embedding x
+- Rectified linear unit ReLU
+	- 最常用
+- Sigmoid
+	- 用来限制embeddings的值域
+- Parametric ReLU
+	- $PReLU(x_i) = max(x_i, 0) + a_imin(x_i, 0)$
+		- $a_i$ is a trainable parameter
+	- Empirically performs better than ReLU
+
+#### GraphGym
+- GNN 设计库，强烈推荐
 
 
 ### Stacking GNN Layers
+- 标准做法 stack GNN layers sequentially  按序堆叠
+	- Input  -  initial raw node feature $x_v$  节点属性特征
+	- Output  -  node embeddings $h_v^{(L)}$  after $L$ GNN layers
+
+#### The Over-smoothing Problem
+- The issue of stacking many GNN layers
+- GNN层数如果过深的话，会产生过平滑问题
+- all the node embeddings converge to the same value
+- 所有节点嵌入都收敛到相同值，即embedding都相同，无法继续节点分类任务
+- 原因是感受野太大，即每个节点收到的信息太多，导致每个节点都知道同样的信息，因此他们也输出同样的信息。
+
+ #### Receptive Filed of a GNN
+- 感受野，the set of nodes that determine the embedding of a node of interest 决定了某个节点嵌入的那些节点集合。也即能接收到的信息的节点的集合
+- In a $K$-layer GNN, each node has a receptive field of $K$-hop neighborhood
+	 - GNN的层数说明了每个节点聚集多少跳邻居的信息
+- The shared neighbors quickly grows when increase the number of hops(num of GNN layers)
+	- 当观察两个节点的感受野的共享节点时，发现重合的节点会随着层数增加而迅速增加
+- 小结一下， stack many GNN layers $\rightarrow$  nodes will have highly overlapped receptive fields $\rightarrow$  node embeddings will be highly similar $\rightarrow$  suffer from the over-smoothing problem
+- 结果，两个离着很远的节点，也会有相似的计算图，相似的Embedding
+
+#### Design GNN Layer Connectivity
+- Be cautious when adding GNN layers 不能无脑堆很多GNN层
+	- Unlike NN in other domain, adding more GNN layers 不是总有作用
+	- 两步来选择层数
+		- 第一步  -  分析感受野，估计解决问题所必需的感受野，例如，计算一下图的diameter
+		- 第二步  - 把GNN层数设置成比所需的感受野多一点点
+			- 用AutoML自动找到最优的 L 层数
+	- 这就产生了 Shallow GNN，GNN的层数很少
+	- 如何增强 shallow GNN 的表达能力
+		- Increase the expressive power within each GNN layer
+			- GNN 层 aggregation/transformation 加深度神经网络
+		- Add layers that do not pass messages 添加不传送消息的层
+			- 可以在GNN层之前/之后加MLP layers，作为预处理层和后处理层
+			- Pre-processing layers: important when encoding node  is necessary
+				- 比如 处理文本/图像、多模态数据
+			- Post-processing layers: important when reasoning / transformation over node embeddings are needed
+				- 比如 图分类、知识图谱、对节点Embedding汇总、推理
+- 如果就是需要很多GNN层
+	- Add **skip connections** in GNNs  恒等映射，类似残差连接
+		- Observation from over-smooting: node embeddings in earlier GNN layers can sometimes better differentiate nodes
+			- 前面感受野较小的层更能区分节点embedding
+		- Solution: add shortcuts in GNN to increase the impact of earlier layers on the final node embeddings
+		- Idea of skip connections:
+			- before adding shortcuts  -  $F(x)$
+			- after adding shortcuts  -  $F(x) + x$
+		- 见同济子豪兄ResNet论文精读
+	- Skip connections 如何起作用
+		- 它创造了模型集成
+		- $N$ skip connections $\rightarrow \enspace 2^N$ possible paths
+		- Each path could have up to $N$ modules
+			- N  残差模块个数
+		- Automaticaaly get a mixture of shallow GNNs and deep GNNs
+	- 例如 GCN with skip connections
+		- A standard GCN layer
+			- $h_v^{(l)} = \sigma(\sum\limits_{u \in N(v)}W^{(l)}\frac{h_u^{(l - 1)}}{|N(v)|})$
+				- 残差 $F(x)$  -  $\sum\limits_{u \in N(v)}W^{(l)}\frac{h_u^{(l - 1)}}{|N(v)|}$
+		- A GCN layer with skip connection
+			- $h_v^{(l)} = \sigma(\sum\limits_{u \in N(v)}W^{(l)}\frac{h_u^{(l - 1)}}{|N(v)|} + h_v^{(l-1)})$
+			- 恒等映射 $x$  -  $h_v^{(l-1)}$
+	- Other Options of Skip Connections
+		- Directly skip to the last layer
+
+### Graph Manipulation in GNNs
 
 ***
 
@@ -446,3 +529,8 @@
 - 介绍了GAT 图注意力网络，注意力机制，将注意力这一概念引入图中，使用注意力机制为邻居对节点信息影响程度加权，用softmax过后的邻居信息加权求和来实现节点嵌入embedding的计算。
 - 介绍了注意力机制两步走的计算方法，为了增强鲁棒性，更是采用了多头注意力机制，分别训练不同的 a 函数，每个 a 函数对应一套 $\alpha$ 权重，来避免偏见。
 - 介绍了GAT的各种优点，包括隐式指定重要性、并行计算、存储高效、归纳泛化等。
+- 介绍了通用GNN层模板，在实践中，往往还会在GNN层中加入传统的深度学习层，比如 Batch Norm、Dropout、Attetion/Gating等。
+- 介绍了Batch Normalization，通过对每个样本计算均值和方差，来对特征进行归一化，目的是稳定训练过程；Dropout，为了防止过拟合，在训练期间，关掉某一部分神经元；非线性激活函数；还有一个设计GNN的库，GraphGym
+- 介绍了GNN层的按序堆叠，以及因此产生的过平滑问题，根本原因在于感受野
+- 介绍了解决方案-控制GNN的层数。那要如何选择到底需要多少GNN层数呢，第一种方法分析感受野，让层数略微多余感受野即可，但这样需要我们进一步优化，来让模型更有表现力，就是在GNN层内部增加深度神经网络，以及在各层的前后增加前处理/后处理层。
+- 介绍了如果GNN确实层数很多的解决方案-skip connections，类似残差连接，就是通过在GNN中增加捷径来提升最上层在最后节点嵌入中的影响
