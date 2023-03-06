@@ -316,7 +316,7 @@
 	- sample  -  对邻域节点采样
 	- aggregate  -  邻域节点的特征聚集
 - GraphSAGE 可选用多种聚合方式来聚合邻居信息，然后再连接节点本身信息，最后使用L2正则化
-- 《Inductive Representation Learning on Large Graphs》
+- 《Inductive Representation Learning on Large Graphs》(NeurlPS 2017)
 - $h_v^{(l)} = \sigma(W^{(l)} \times CONCAT(h_v^{(l-1)}, AGG(\{ h_u^{(l-1)}, \forall u \in N(v) \})))$
 - Written as Message + Aggregation
 	- Message is computed within the AGG(·)
@@ -393,6 +393,7 @@
 	- inductive capability 归纳泛化
 		- 共享同一个 $a$ 函数
 		- 并泛化到新图
+***
 
 ### GNN Layers in Practice
 - 通用GNN层模板
@@ -447,7 +448,7 @@
 
 #### GraphGym
 - GNN 设计库，强烈推荐
-
+***
 
 ### Stacking GNN Layers
 - 标准做法 stack GNN layers sequentially  按序堆叠
@@ -511,9 +512,66 @@
 			- 恒等映射 $x$  -  $h_v^{(l-1)}$
 	- Other Options of Skip Connections
 		- Directly skip to the last layer
+***
 
 ### Graph Manipulation in GNNs
+- 为什么原输入图 $\neq$ 计算图
+	- Feature level  节点特征层面
+		- 原图缺少特征 ->  feature augmentation
+	- Structure level  图结构层面
+		- 图太稀疏 ->  inefficient message passing
+		- 图太稠密 ->  message passing is too costly
+		- 图太大 ->  cannot fit the computational graph into a GPU
+	- 对于embeddings，原始的图不太可能恰好就是最优的计算图
 
+#### Graph Manipulation Approaches
+- Graph Feature manipulation
+	- lacks features  ->  **Feature augmentation**
+- Graph Structure manipulation
+	- too sparse  ->  **Add virtual nodes / edges**
+	- too dense  ->  **Sample neighbots when doing message passing**
+	- too large  ->  **Sample subgraohs to compute embeddings**
+
+#### Feature Augmentation
+- 为什么需要特征增强
+
+1. 原始图没有节点特征信息，只有邻接矩阵
+	- Assign constant values to nodes，也可以是固定长度的常数向量
+	- Assign unique IDs to nodes，这些ID转换成独热编码
+|          | 节点特征常数                                          | 节点特征独热编码                                                   |
+| -------- | ----------------------------------------------------- | ------------------------------------------------------------------ |
+| 表达能力 | 中等。所有节点都相同，但GNN仍然可以从图结构中学到信息 | 高。每个节点有一个独有的ID，所以节点特有的信息能被保存下来         |
+| 归纳学习 | 高。易于泛化新节点，只需赋值常数特征，应用GNN         | 低。无法泛化到新节点，新节点有新ID，GNN无法得知如何embed没见过的ID |
+| 计算消耗 | 低。标量或固定长度的常数向量                          | 高。高维特征                                                       |
+| 应用案例 | 任意图，归纳式                                        | 小图，直推式                                                                   |
+
+2. Certain structures are hard to learn by GNN
+	- 比如 数节点所在环的长度
+		- 环中所有节点同形，处分用节点属性特征区分
+		- 计算图完全相同
+	- 解决方法:  人为补充信息至节点属性特征
+- 其它常用的增强特征
+	- Clustering coefficient
+	- PageRank
+	- Centrality
+	- Node Degree
+
+#### Add Virtual Nodes/Edges
+1. Add virtual edges
+	- connect 2-hop neighbors via virtual edges 
+	- instead of using adj. matrix $A$ for GNN computation, use $A + A^2$
+2. Add virtual nodes
+	- the virtual node will connect to all the nodes in the graph
+	- all the nodes will have a distance of 2
+		- Node A  -  Virtual node  -  Node B
+	- Greatly improves message passing in sparse graphs, 虚拟节点的Embedding可以作为全图的Embeddings
+
+#### Node Neighborhood Sampling
+- 以前: 所有节点都用来消息传递
+- 新方法:  每次迭代时，随机采样节点邻居来做消息传递
+- 我们期望，每个Epoch采样不同的邻域
+- 好处是大规模降低计算消耗
+- 扩展到大规模图(推荐系统)
 ***
 
 ## 本章总结
@@ -534,3 +592,5 @@
 - 介绍了GNN层的按序堆叠，以及因此产生的过平滑问题，根本原因在于感受野
 - 介绍了解决方案-控制GNN的层数。那要如何选择到底需要多少GNN层数呢，第一种方法分析感受野，让层数略微多余感受野即可，但这样需要我们进一步优化，来让模型更有表现力，就是在GNN层内部增加深度神经网络，以及在各层的前后增加前处理/后处理层。
 - 介绍了如果GNN确实层数很多的解决方案-skip connections，类似残差连接，就是通过在GNN中增加捷径来提升最上层在最后节点嵌入中的影响
+- 介绍了GNN中的原始图很难是最优的计算图，原因在于节点特征层面，原始图缺少特征；图结构层面，图太稀疏、太稠密、太大，这些都有可能。
+- 介绍了Graph Manipulation的方法，节点特征层面，对于原始图缺少特征，进行特征增强；图结构层面，如果图太稀疏，增加虚拟节点/连接，图太稠密，消息传递时随机采样节点邻居，图太大，采样子图。
