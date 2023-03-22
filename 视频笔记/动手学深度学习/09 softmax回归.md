@@ -19,7 +19,7 @@
 -  自然区间R
 -  跟真实值的区别作为损失
 
-![image text](https://raw.githubusercontent.com/burningmysoul2077/Notes/main/ScreenShots/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/Pasted%20image%2020230321163851.png)
+![image text](https://raw.githubusercontent.com/burningmysoul2077/Notes/main/ScreenShots/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/Pasted%20image%2020230320114513.png)
 
 ##### 分类：
 
@@ -29,7 +29,7 @@
 	-  需要和输出一样多的 _仿射函数 affine function_。 每个输出对应于它自己的仿射函数
 	-  输出 $i$ 是预测为第 $i$ 类的置信度
 
-![image text](https://raw.githubusercontent.com/burningmysoul2077/Notes/main/ScreenShots/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/Pasted%20image%2020230321163910.png)
+![image text](https://raw.githubusercontent.com/burningmysoul2077/Notes/main/ScreenShots/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/Pasted%20image%2020230320114532.png)
 
 -  上图中有 4 个特征和 3 个可能的输出类别
 	- 需要 12 个标量来表示权重-带下标的𝑤
@@ -155,7 +155,7 @@
 - 绿色是它的似然函数
 - 橙色是损失函数的梯度，穿过原点的一次函数
 
-![image text](https://raw.githubusercontent.com/burningmysoul2077/Notes/main/ScreenShots/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/Pasted%20image%2020230321184131.png)
+![image text](https://raw.githubusercontent.com/burningmysoul2077/Notes/main/ScreenShots/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/Pasted%20image%2020230320152401.png)
 
 > 随着预测值与真实值越来越接近，梯度会随着结果逼近而下降
 
@@ -163,7 +163,7 @@
 
 - $l(y, y^{'}) = \lvert y - y^{'}\rvert$
 
-![image text](https://raw.githubusercontent.com/burningmysoul2077/Notes/main/ScreenShots/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/Pasted%20image%2020230321184115.png)
+![image text](https://raw.githubusercontent.com/burningmysoul2077/Notes/main/ScreenShots/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/Pasted%20image%2020230320152703.png)
 
 > 梯度保持不变，但在 0 处不可导、梯度随机
 
@@ -171,7 +171,7 @@
 
 #### Huber's Robust Loss
 
-![image text](https://raw.githubusercontent.com/burningmysoul2077/Notes/main/ScreenShots/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/Pasted%20image%2020230321184059.png)
+![image text](https://raw.githubusercontent.com/burningmysoul2077/Notes/main/ScreenShots/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/Pasted%20image%2020230320152933.png)
 
 > 结合L1 Loss 和 L2 Loss的优点
 
