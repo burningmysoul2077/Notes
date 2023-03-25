@@ -1,6 +1,40 @@
-  
+ * [回归 VS 分类](#回归-vs-分类)
+  * [从回归到多类分类：](#从回归到多类分类)
+    * [回归：](#回归)
+    * [分类：](#分类)
+* [增: 置信度和置信区间](#增-置信度和置信区间)
+  * [点估计 Point Estimation](#点估计-point-estimation)
+  * [区间估计 Interval Estimation](#区间估计-interval-estimation)
+  * [置信区间 Confidence Interval](#置信区间-confidence-interval)
+  * [置信度 Confidence Level](#置信度-confidence-level)
+* [Softmax回归](#softmax回归)
+  * [均方损失](#均方损失)
+    * [独热编码](#独热编码)
+    * [无校验比例](#无校验比例)
+    * [校验比例](#校验比例)
+  * [Softmax和交叉熵损失](#softmax和交叉熵损失)
+    * [对数似然](#对数似然)
+    * [softmax及其导数](#softmax及其导数)
+  * [小结](#小结)
+* [损失函数](#损失函数)
+  * [L2 Loss](#l2-loss)
+  * [L1 Loss](#l1-loss)
+  * [Huber's Robust Loss](#hubers-robust-loss)
+* [增：信息论基础](#增信息论基础)
+  * [信息论 information theory](#信息论-information-theory)
+    * [熵](#熵)
+    * [信息量](#信息量)
+    * [重新审视交叉熵](#重新审视交叉熵)
+* [总结](#总结)
+* [图片分类数据集](#图片分类数据集)
+* [从零实现softmax回归](#从零实现softmax回归)
+* [softmax的简洁实现](#softmax的简洁实现)
+* [softmax回归Q&A](#softmax回归qa)
 
-###  回归 VS 分类
+
+ 
+
+#  回归 VS 分类
 
 -  回归估计一个连续值
 -  分类预测一个离散类别
@@ -11,9 +45,9 @@
 
 -  这两者的界限往往很模糊。其中的一个原因是：即使我们只关心硬类别，我们仍然使用软类别的模型。
 
-####  从回归到多类分类：
+##  从回归到多类分类：
 
-##### 回归：
+### 回归：
 
 -  单连续数值输出
 -  自然区间R
@@ -21,7 +55,7 @@
 
 ![image text](https://raw.githubusercontent.com/burningmysoul2077/Notes/main/ScreenShots/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/Pasted%20image%2020230320114513.png)
 
-##### 分类：
+### 分类：
 
 -  **网络架构**
 	-  通常多个输出
@@ -48,34 +82,34 @@
 -  分类问题从回归的单输出问题变成多输出
 	- softmax回归的输出值个数 = 标签中的类别数
 
-### 增: 置信度和置信区间
+# 增: 置信度和置信区间
 
-#### 点估计 Point Estimation
+## 点估计 Point Estimation
 
 -  用样本统计量来估计总体参数，因为样本统计量为数轴上某一点值，估计的结果也以一个点的数值表示，所以称为 点估计
 
-#### 区间估计 Interval Estimation
+## 区间估计 Interval Estimation
 
 -  区间估计是在点估计的基础上，给出总体参数估计的一个区间范围，该区间通常由样本统计量加减估计误差得到。
 -  与点估计不同，进行区间估计时，根据样本统计量的抽样分布可以对样本统计量与总体参数的接近程度给出一个概率度量。
 
-#### 置信区间 Confidence Interval
+## 置信区间 Confidence Interval
 
 -  置信区间是指由样本统计量所构造的总体参数的估计区间。在统计学中，一个概率样本的置信区间是对这个样本的某个总体参数的区间估计
 
-#### 置信度 Confidence Level
+## 置信度 Confidence Level
 
 -  区间估计的估算的区间的准确度(可信度)称为置信度
 -  通常情况下，95%被作为常用的置信度
 -  随着置信度的上升，置信区间的跨度也就越大，对参数估计的精度必定降低。点估计就一个值，精度高，但置信度则低
 
-### Softmax回归
+# Softmax回归
 
-#### 均方损失
+## 均方损失
 
 - 对类别进行一位有效编码
 
-##### 独热编码
+## 独热编码
 
 -  一般的分类问题并不与类别之间的自然顺序有关。 
 -  统计学家很早以前就发明了一种表示分类数据的简单方法：_独热编码one-hot encoding_
@@ -88,7 +122,7 @@
 - 最大值为预测
 - $\hat{y}=\underset {i}{argmax}\quad o_{i}$
 
-#### 无校验比例
+### 无校验比例
 
 - 对类别进行一位有效编码
 - 最大值为预测
@@ -97,7 +131,7 @@
 - $o_y - o_i \geq \Delta(y, i)$
 - 这样可以将正确的类和其他类区分开
 
-#### 校验比例
+### 校验比例
 
 - 社会科学家邓肯·卢斯于1959年在 选择模型choice mode）的理论基础上 发明的 _softmax函数_ 正是这样做的： 
 	- softmax函数能够将未规范化的预测变换为非负数并且总和为1，同时让模型保持 可导的性质。 
@@ -110,9 +144,9 @@
 
 - 真实概率 $\textbf{y}$ 和 $\hat{\textbf{y}}$ 的区别作为损失
 
-#### Softmax和交叉熵损失
+## Softmax和交叉熵损失
 
-##### 对数似然
+### 对数似然
 
 - softmax函数给出了一个向量 𝐲̂  ， 我们可以将其视为“对给定任意输入 𝐱 的每个类的条件概率”
 	- 例如，$𝑦̂_1 =𝑃(𝑦=猫∣𝐱)$。 
@@ -132,22 +166,22 @@
 - 因为只有一类 y 为1，其他全部为0，本质就是对真实类别的 y 求log，再求负
 - 不关于对非正确类的预测值，只关心正确类预测值的置信度
 
-##### softmax及其导数
+### softmax及其导数
 
 - 其梯度是真实概率和预测概率的区别
 - $\partial_{o_{i}} l(\textbf{y}, \hat{\textbf{y}}) = softmax(\textbf{o})_{i} - y_{i}$
 
 - 尽管softmax是一个非线性函数，但softmax回归的输出仍然由输入特征的仿射变换决定。 因此，softmax回归是一个 _线性模型linear model_
 
-#### 小结
+## 小结
 
 - Softmax回归是一个多类分类模型
 - 使用Softmax操作子得到每个类的预测置信度，和为1的概率
 - 使用交叉熵来衡量和预测标号的区别
 
-### 增: 损失函数
+# 损失函数
 
-#### L2 Loss
+## L2 Loss
 
 - $l(y, y^{'}) = \frac{1}{2}(y - y^{'})^2$
 
@@ -159,7 +193,7 @@
 
 > 随着预测值与真实值越来越接近，梯度会随着结果逼近而下降
 
-#### L1 Loss
+## L1 Loss
 
 - $l(y, y^{'}) = \lvert y - y^{'}\rvert$
 
@@ -169,7 +203,7 @@
 
 > 当预测值跟真实值比较远时，梯度是常数，好处是稳定，坏处是 0 处不可导，似然函数不平滑
 
-#### Huber's Robust Loss
+## Huber's Robust Loss
 
 ![image text](https://raw.githubusercontent.com/burningmysoul2077/Notes/main/ScreenShots/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/Pasted%20image%2020230320152933.png)
 
@@ -179,13 +213,13 @@
 
 > 当预测值与真实值比较接近，是均方误差
 
-### 增：信息论基础
+# 增：信息论基础
 
-#### 信息论 information theory
+## 信息论 information theory
 
 - 涉及编码、解码、发送以及尽可能简洁地处理信息或数据
 
-#### 熵
+## 熵
 
 - 信息论的核心思想是量化数据中的信息内容
 - 在信息论中，该数值被称为分布 𝑃 的 **熵 entropy**， 可以通过以下方程得到：
@@ -196,7 +230,7 @@
 	- log可分别取2、e、10为底，在工程中相应的的单位分别为比特(bit)、奈特(nat)、迪西特(decit)
 - 因此，一个纳特是 $\frac{1}{ln(2)} ≈ 1.44$ 比特。
 
-#### 信息量
+## 信息量
 
 -  压缩与预测有什么关系呢？ 想象一下，我们有一个要压缩的数据流。 
 -  如果我们很容易预测下一个数据，那么这个数据就很容易压缩。 为什么呢？ 
@@ -210,7 +244,7 @@
 
 - 熵， 是当分配的概率真正匹配数据生成过程时的 _信息量的期望_ 
 
-#### 重新审视交叉熵
+## 重新审视交叉熵
 
 - 如果把熵 𝐻(𝑃) 想象为“知道真实概率的人所经历的惊异程度”，那么什么是交叉熵？ 
 
@@ -223,27 +257,33 @@
 	1. 最大化观测数据的似然
 	2. 最小化传达标签所需的惊异。
 
-## 总结
+# 总结
 - 本节介绍了回归与分类问题，softmax函数及softmax回归
 - 介绍了均方损失、无校验比例、校验比例以及softmax和交叉熵损失，最后推导了softmax的梯度导数
 - 介绍了损失函数，包括 L1 损失、L2损失和 结合前两者优点的Huber's Robust 损失
 - 补充介绍了信息论基础，熵与信息量以及交叉熵的概念理解
 
-
+------
 
 ### 图片分类数据集
 
 [09 图像分类数据集.ipynb](https://github.com/burningmysoul2077/Notes/blob/main/%E8%A7%86%E9%A2%91%E7%AC%94%E8%AE%B0/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/09%20%E5%9B%BE%E5%83%8F%E5%88%86%E7%B1%BB%E6%95%B0%E6%8D%AE%E9%9B%86.ipynb)
 
-### 从零实现softmax回归
+------
+
+# 从零实现softmax回归
 
 [09 softmax回归从零实现.ipynb](https://github.com/burningmysoul2077/Notes/blob/main/%E8%A7%86%E9%A2%91%E7%AC%94%E8%AE%B0/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/09%20softmax%E5%9B%9E%E5%BD%92%E4%BB%8E%E9%9B%B6%E5%AE%9E%E7%8E%B0.ipynb)
 
-### softmax的简洁实现
+------
+
+# softmax的简洁实现
 
 [09 softmax回归简洁实现.ipynb](https://github.com/burningmysoul2077/Notes/blob/main/%E8%A7%86%E9%A2%91%E7%AC%94%E8%AE%B0/%E5%8A%A8%E6%89%8B%E5%AD%A6%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/09%20softmax%E5%9B%9E%E5%BD%92%E7%AE%80%E6%B4%81%E5%AE%9E%E7%8E%B0.ipynb)
 
-## softmax回归Q&A
+------
+
+# softmax回归Q&A
 
 - `softlabel训练策略以及为什么有效？`
 >  softmax用指数很难逼近1，softlabel将正例和负例分别标记为0.9和0.1使结果逼近变得可能，这是一个常用的小技巧。
