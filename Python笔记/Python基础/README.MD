@@ -1,8 +1,8 @@
 # Python 思维导图
 
-![Python学习路线图]()
+![Python学习路线图](https://raw.githubusercontent.com/burningmysoul2077/Notes/main/ScreenShots/Python%E7%AC%94%E8%AE%B0/uTools_1688387192592.png)
 
-![Python思维导图]()
+![Python思维导图](https://raw.githubusercontent.com/burningmysoul2077/Notes/main/ScreenShots/Python%E7%AC%94%E8%AE%B0/uTools_1688387227750.png)
 
 # 参考引用
 
