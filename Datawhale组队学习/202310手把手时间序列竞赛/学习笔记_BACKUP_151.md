@@ -19,7 +19,11 @@
 - `本赛题提供的数据集包含三张数据表。`
 - ` 其中，power_forecast_history.csv 为站点运营数据，power.csv为站点充电量数据，stub_info.csv为站点静态数据，训练集为历史一年的数据，测试集为未来一周的数据。`
 
+<<<<<<< HEAD
 集清单与格式说明：
+
+=======
+>>>>>>> efe655a24e2780b8c0246f9bb8a8b6b661db9091
 ![](https://file.public.marsbigdata.com/2023/09/28/62dfR3wroe_f0osL.png)
 
 ## 1.5 评估指标
@@ -41,6 +45,11 @@
 ![](https://file.public.marsbigdata.com/2023/09/28/HlXuJ03K2Xl9N2mF.png)
 
 
+<<<<<<< HEAD
+=======
+![](https://file.public.marsbigdata.com/2023/09/28/HlXuJ03K2Xl9N2mF.png)
+>>>>>>> efe655a24e2780b8c0246f9bb8a8b6b661db9091
+
 ---
 
 # 2 时间序列学习
@@ -50,6 +59,7 @@
 ---
 
 # 3 赛题学习
+<<<<<<< HEAD
 
 ## 学习 baseline
 
@@ -61,4 +71,5 @@
 !pip install -U lightgbm
 # _-U_就是 --upgrade,意思是如果已安装就升级到最新版
 ```
-
+=======
+>>>>>>> efe655a24e2780b8c0246f9bb8a8b6b661db9091

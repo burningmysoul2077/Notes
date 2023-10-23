@@ -20,6 +20,7 @@
 - ` 其中，power_forecast_history.csv 为站点运营数据，power.csv为站点充电量数据，stub_info.csv为站点静态数据，训练集为历史一年的数据，测试集为未来一周的数据。`
 
 集清单与格式说明：
+
 ![](https://file.public.marsbigdata.com/2023/09/28/62dfR3wroe_f0osL.png)
 
 ## 1.5 评估指标
@@ -41,11 +42,12 @@
 ![](https://file.public.marsbigdata.com/2023/09/28/HlXuJ03K2Xl9N2mF.png)
 
 
+
 ---
 
 # 2 时间序列学习
 
--  统一更新到  ![时间序列总结(成长中...)](https://github.com/burningmysoul2077/Notes/blob/main/%E6%97%B6%E9%97%B4%E5%BA%8F%E5%88%97/%E6%97%B6%E9%97%B4%E5%BA%8F%E5%88%97%E6%80%BB%E7%BB%93(%E6%88%90%E9%95%BF%E4%B8%AD...).md)
+-  统一更新到 [[时间序列总结(成长中...)]]
 
 ---
 
@@ -61,4 +63,3 @@
 !pip install -U lightgbm
 # _-U_就是 --upgrade,意思是如果已安装就升级到最新版
 ```
-
