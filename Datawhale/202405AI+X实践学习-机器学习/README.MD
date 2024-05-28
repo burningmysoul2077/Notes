@@ -29,6 +29,10 @@
 
 # 学习任务
 
-## 任务1  安泰杯 —— 跨境电商智能算法大赛 [[Competition1]]
+## 任务1  安泰杯 —— 跨境电商智能算法大赛 [Competition1]
 
-## 任务2 2020数字中国创新大赛-数字政府赛道  智能算法赛：智慧海洋建设 [[Competition2]]
+## 任务2 2020数字中国创新大赛-数字政府赛道  智能算法赛：智慧海洋建设 [Competition2]
+
+
+[Competition1]: ./Competition1.md
+[Competition2]: ./Competition2.md
